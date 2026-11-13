@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#F7F1E5" />
+<title>上岸灵签</title>
+<style>
+  :root {
+    --bg: #F7F1E5;
+    --paper: #FFFDF7;
+    --red: #B93A32;
+    --red-deep: #9E2F28;
+    --gold: #C9A227;
+    --gold-light: #E6CF7F;
+    --gold-pale: rgba(201,162,39,.16);
+    --ink: #4A3B2F;
+    --ink-soft: #8A7A66;
+    --radius: 16px;
+    --font: "Noto Serif SC", "Songti SC", "SimSun", "STSong", serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font);
+    color: var(--ink);
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse 120% 60% at 50% -10%, #FBF6EA 0%, transparent 60%),
+      radial-gradient(ellipse 90% 50% at 100% 100%, rgba(201,162,39,.10) 0%, transparent 70%),
+      radial-gradient(ellipse 90% 50% at 0% 90%, rgba(185,58,50,.07) 0%, transparent 70%),
+      var(--bg);
+  }
+
+  /* ---------- 氛围层：祥云缓移 + 金粉漂浮 ---------- */
+  .ambience { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .cloud {
+    position: absolute;
+    opacity: .5;
+    animation: drift linear infinite;
+  }
+  .cloud.c1 { top: 12%; left: -140px; animation-duration: 55s; }
+  .cloud.c2 { top: 30%; left: -180px; animation-duration: 75s; animation-delay: -30s; opacity: .35; }
+  .cloud.c3 { bottom: 16%; left: -160px; animation-duration: 65s; animation-delay: -12s; opacity: .4; }
+  @keyframes drift {
+    from { transform: translateX(0); }
+    to   { transform: translateX(calc(100vw + 320px)); }
+  }
+  .dust {
+    position: absolute;
+    bottom: -8px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #E6CF7F 0%, rgba(201,162,39,0) 70%);
+    animation: rise linear infinite;
+    opacity: 0;
+  }
+  @keyframes rise {
+    0%   { opacity: 0; transform: translateY(0) scale(.6); }
+    15%  { opacity: .9; }
+    80%  { opacity: .35; }
+    100% { opacity: 0; transform: translateY(-92vh) scale(1.15); }
+  }
+
+  /* ---------- 顶部横幅 ---------- */
+  .top-banner {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+    background: linear-gradient(120deg, #A32E27 0%, var(--red) 45%, var(--red-deep) 100%);
+    color: #FFF6E8;
+    text-align: center;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 11px 12px;
+    box-shadow: 0 2px 10px rgba(158,47,40,.28);
+    position: relative;
+  }
+  .top-banner::after {
+    content: "";
+    position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-light), transparent);
+  }
+  .top-banner .orn { color: var(--gold-light); font-size: 11px; margin: 0 8px; }
+
+  main { flex: 1; position: relative; z-index: 1; padding-top: 42px; }
+
+  .page { display: none; min-height: calc(100vh - 42px); flex-direction: column; align-items: center; padding: 24px 22px 30px; }
+  .page.active { display: flex; animation: fadeIn .55s cubic-bezier(.22,.8,.36,1) both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(14px);} to { opacity: 1; transform: none;} }
+
+  /* ---------- 品牌 Logo ---------- */
+  .logo-img {
+    width: 190px;
+    max-width: 62vw;
+    height: auto;
+    display: block;
+    margin: 4px auto 0;
+    filter: drop-shadow(0 3px 8px rgba(74,59,47,.14));
+    animation: fadeIn .6s ease both;
+  }
+  .logo-sm { width: 140px; margin-top: 0; }
+
+  /* ---------- 标题：鎏金流光 ---------- */
+  .page-title {
+    margin-top: 12px;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: 8px;
+    text-align: center;
+    background: linear-gradient(100deg, #B93A32 0%, #B93A32 30%, #E1B94F 46%, #B93A32 62%, #B93A32 100%);
+    background-size: 260% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 5s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0%, 100% { background-position: 0% 0; }
+    50% { background-position: 100% 0; }
+  }
+  .page-sub {
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 6px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .page-sub::before, .page-sub::after {
+    content: "";
+    width: 26px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold));
+  }
+  .page-sub::after { background: linear-gradient(90deg, var(--gold), transparent); }
+
+  .brush-line {
+    width: 120px; height: 4px;
+    margin: 16px auto 0;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+    border-radius: 3px;
+    opacity: .55;
+  }
+
+  /* ---------- 首页签筒 ---------- */
+  .tube-wrap {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: floatY 4s ease-in-out infinite;
+    position: relative;
+  }
+  @keyframes floatY { 0%,100% { transform: translateY(0);} 50% { transform: translateY(-8px);} }
+  /* 签筒下的光晕 */
+  .tube-glow {
+    position: absolute;
+    bottom: -6px; left: 50%;
+    transform: translateX(-50%);
+    width: 220px; height: 34px;
+    background: radial-gradient(ellipse, rgba(201,162,39,.28) 0%, transparent 70%);
+    animation: glowPulse 3s ease-in-out infinite;
+  }
+  @keyframes glowPulse { 0%,100% { opacity:.6; transform:translateX(-50%) scale(1);} 50% { opacity:1; transform:translateX(-50%) scale(1.12);} }
+
+  /* ---------- 主按钮：流光 ---------- */
+  .btn-main {
+    margin-top: 34px;
+    width: 100%;
+    max-width: 320px;
+    padding: 17px 20px;
+    font-family: var(--font);
+    font-size: 18px;
+    letter-spacing: 3px;
+    color: #FFF8EC;
+    background: linear-gradient(160deg, #C4463D 0%, var(--red) 40%, var(--red-deep) 100%);
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 22px rgba(158,47,40,.35), inset 0 1px 0 rgba(255,255,255,.28);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-main::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -80%;
+    width: 50%; height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255,244,214,.4), transparent);
+    animation: sweep 3.2s ease-in-out infinite;
+  }
+  @keyframes sweep {
+    0% { left: -80%; } 55%, 100% { left: 130%; }
+  }
+  .btn-main:active { transform: scale(.97); box-shadow: 0 4px 12px rgba(158,47,40,.3); }
+
+  .hint {
+    margin-top: 24px;
+    font-size: 13px;
+    line-height: 2;
+    color: var(--ink-soft);
+    text-align: center;
+    max-width: 330px;
+  }
+  .hint em { font-style: normal; color: var(--red); }
+  .hint .orn { color: var(--gold); margin: 0 4px; }
+
+  .slogan {
+    margin-top: auto;
+    padding-top: 26px;
+    font-size: 14px;
+    letter-spacing: 6px;
+    color: var(--gold);
+    text-align: center;
+  }
+  .slogan::before, .slogan::after { content: " ❖ "; color: var(--gold-light); font-size: 11px; }
+
+  /* ---------- 抽签动画页 ---------- */
+  .shake-stage { margin-top: 54px; position: relative; display: flex; flex-direction: column; align-items: center; }
+  .shaking { animation: shakeTube .5s ease-in-out infinite; transform-origin: 50% 90%; }
+  @keyframes shakeTube {
+    0%,100% { transform: rotate(0deg) translateY(0); }
+    20% { transform: rotate(-4.5deg) translateY(-3px); }
+    45% { transform: rotate(4.5deg) translateY(0); }
+    70% { transform: rotate(-3deg) translateY(-2px); }
+  }
+  .stick-fly {
+    position: absolute;
+    bottom: 235px;
+    left: 50%;
+    opacity: 0;
+    transform: translateX(-50%);
+    filter: drop-shadow(0 0 10px rgba(201,162,39,.55));
+    animation: stickOut 1.9s cubic-bezier(.3,.7,.3,1) forwards;
+    animation-delay: .85s;
+  }
+  @keyframes stickOut {
+    0%   { opacity: 0; transform: translateX(-50%) translateY(30px) rotate(0deg); }
+    15%  { opacity: 1; }
+    60%  { opacity: 1; transform: translateX(-50%) translateY(-74px) rotate(-3deg); }
+    100% { opacity: 1; transform: translateX(-50%) translateY(-124px) rotate(2deg); }
+  }
+  .loading-text {
+    margin-top: 46px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    letter-spacing: 5px;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
+  .dots::after { content: ""; animation: dots 1.2s steps(4) infinite; }
+  @keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+
+  /* ---------- 结果页 ---------- */
+  .result-card {
+    width: 100%;
+    max-width: 340px;
+    margin-top: 22px;
+    background:
+      radial-gradient(ellipse 130% 40% at 50% 0%, rgba(201,162,39,.10) 0%, transparent 60%),
+      var(--paper);
+    border: 1px solid rgba(201,162,39,.5);
+    border-radius: var(--radius);
+    padding: 30px 24px 26px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 14px 36px rgba(74,59,47,.14), 0 2px 0 rgba(201,162,39,.25) inset;
+    overflow: hidden;
+  }
+  .result-card::before {
+    content: "";
+    position: absolute; inset: 6px;
+    border: 1px solid rgba(201,162,39,.32);
+    border-radius: 12px;
+    pointer-events: none;
+  }
+  .corner { position: absolute; width: 22px; height: 22px; border-color: var(--gold); border-style: solid; opacity: .85; }
+  .corner.tl { top: 10px; left: 10px; border-width: 2px 0 0 2px; border-radius: 6px 0 0 0; }
+  .corner.tr { top: 10px; right: 10px; border-width: 2px 2px 0 0; border-radius: 0 6px 0 0; }
+  .corner.bl { bottom: 10px; left: 10px; border-width: 0 0 2px 2px; border-radius: 0 0 0 6px; }
+  .corner.br { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; border-radius: 0 0 6px 0; }
+
+  /* 卡片内元素逐个浮现 */
+  .reveal { opacity: 0; transform: translateY(12px); animation: revealUp .6s cubic-bezier(.22,.8,.36,1) forwards; }
+  @keyframes revealUp { to { opacity: 1; transform: none; } }
+  .d1 { animation-delay: .10s; } .d2 { animation-delay: .25s; } .d3 { animation-delay: .42s; }
+  .d4 { animation-delay: .58s; } .d5 { animation-delay: .74s; } .d6 { animation-delay: .92s; }
+
+  .luck-no { font-size: 13px; color: var(--gold); letter-spacing: 5px; }
+  .luck-name {
+    margin-top: 10px;
+    font-size: 31px;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 5px;
+  }
+  /* 盖章动画 */
+  .seal {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 6px 16px;
+    font-size: 12.5px;
+    letter-spacing: 4px;
+    color: #FFF6E8;
+    background: radial-gradient(circle at 30% 30%, #C4463D, var(--red-deep));
+    border-radius: 7px;
+    transform: rotate(-3deg);
+    box-shadow: 0 3px 8px rgba(158,47,40,.35);
+    animation: stamp .45s cubic-bezier(.34,1.56,.64,1) both;
+    animation-delay: .4s;
+  }
+  @keyframes stamp {
+    0% { opacity: 0; transform: rotate(-3deg) scale(2.2); }
+    100% { opacity: 1; transform: rotate(-3deg) scale(1); }
+  }
+  .luck-text {
+    margin-top: 18px;
+    font-size: 17.5px;
+    line-height: 2;
+    color: var(--ink);
+    letter-spacing: 3px;
+  }
+  .divider {
+    width: 72px; height: 1px;
+    margin: 16px auto;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    position: relative;
+  }
+  .divider::after {
+    content: "❖";
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -54%);
+    font-size: 9px;
+    color: var(--gold);
+    background: var(--paper);
+    padding: 0 6px;
+  }
+  .luck-read { font-size: 13.5px; line-height: 1.95; color: var(--ink-soft); padding: 0 4px; }
+  .koi-box { margin-top: 4px; }
+  .koi-box svg {
+    animation: swim 4.5s ease-in-out infinite;
+    transform-origin: 50% 50%;
+  }
+  @keyframes swim {
+    0%, 100% { transform: translateX(-6px) rotate(-2deg); }
+    50% { transform: translateX(6px) rotate(2deg); }
+  }
+
+  /* 结果页按钮组 */
+  .btn-group { width: 100%; max-width: 340px; margin-top: 26px; display: flex; flex-direction: column; gap: 12px; }
+  .btn {
+    font-family: var(--font);
+    border-radius: 999px;
+    padding: 14px 18px;
+    font-size: 16px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform .15s ease, box-shadow .15s ease;
+    width: 100%;
+    background: transparent;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary {
+    background: linear-gradient(160deg, #C4463D, var(--red-deep));
+    color: #FFF8EC;
+    box-shadow: 0 6px 16px rgba(158,47,40,.32);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -80%;
+    width: 50%; height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255,244,214,.35), transparent);
+    animation: sweep 3.6s ease-in-out infinite;
+  }
+  .btn-outline { border-color: var(--red); color: var(--red); background: rgba(185,58,50,.04); }
+  .btn-gold { border-color: var(--gold); color: var(--gold); background: var(--gold-pale); }
+  .btn-small { padding: 10px 16px; font-size: 13.5px; }
+
+  /* 转发提示条 */
+  .forward-tip {
+    display: none;
+    margin-top: 2px;
+    padding: 11px 16px;
+    font-size: 12.5px;
+    color: var(--red);
+    background: rgba(185,58,50,.07);
+    border: 1px dashed rgba(185,58,50,.45);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    line-height: 1.7;
+    animation: fadeIn .4s ease both;
+  }
+  .forward-tip.show { display: block; }
+
+  /* 彩蛋弹窗 */
+  .modal-mask {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(74,59,47,.5);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    z-index: 90;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+  }
+  .modal-mask.show { display: flex; animation: fadeIn .3s ease both; }
+  .modal {
+    background: var(--paper);
+    border: 1px solid var(--gold);
+    border-radius: 16px;
+    padding: 32px 26px;
+    max-width: 300px;
+    width: 100%;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 16px 44px rgba(74,59,47,.35);
+    animation: stamp .4s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .modal::before {
+    content: "";
+    position: absolute; inset: 6px;
+    border: 1px solid rgba(201,162,39,.35);
+    border-radius: 12px;
+    pointer-events: none;
+  }
+  .modal .egg-title { color: var(--gold); font-size: 13px; letter-spacing: 5px; }
+  .modal .egg-text { margin-top: 14px; color: var(--red); font-size: 17.5px; letter-spacing: 3px; line-height: 1.9; }
+  .modal .btn { margin-top: 20px; }
+
+  /* 转发海报弹窗 */
+  .poster-modal { max-width: 350px; padding: 20px 18px 18px; }
+  .poster-img {
+    width: 100%;
+    display: block;
+    margin-top: 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(201,162,39,.5);
+    box-shadow: 0 6px 18px rgba(74,59,47,.15);
+  }
+  .poster-modal .btn { margin-top: 12px; }
+  .save-hint {
+    margin-top: 12px;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--red);
+    background: rgba(185,58,50,.07);
+    border: 1px dashed rgba(185,58,50,.4);
+    border-radius: 10px;
+    padding: 9px 12px;
+    line-height: 1.7;
+  }
+
+  /* toast */
+  .toast {
+    position: fixed;
+    bottom: 80px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(74,59,47,.9);
+    color: #FFF8EC;
+    font-size: 13px;
+    letter-spacing: 1px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    z-index: 99;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s ease;
+    max-width: 82vw;
+    text-align: center;
+  }
+  .toast.show { opacity: 1; }
+
+  @media (min-width: 480px) {
+    .page { justify-content: center; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01s !important; animation-iteration-count: 1 !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 氛围层：缓移祥云 + 漂浮金粉 -->
+<div class="ambience" id="ambience">
+  <svg class="cloud c1" width="180" height="60" viewBox="0 0 180 60"><g fill="none" stroke="#C9A227" stroke-width="2.5" stroke-linecap="round"><path d="M10 40 q8 -14 24 -8 q6 -14 22 -6 q14 -8 22 4 q16 -4 16 10"/><path d="M110 46 q8 -10 20 -6 q8 -8 18 0"/></g></svg>
+  <svg class="cloud c2" width="220" height="70" viewBox="0 0 220 70"><g fill="none" stroke="#B93A32" stroke-width="2" stroke-linecap="round" opacity=".7"><path d="M14 48 q10 -16 30 -10 q8 -16 28 -7 q18 -9 26 5 q20 -5 20 12"/><path d="M140 52 q10 -12 26 -7 q10 -9 22 0"/></g></svg>
+  <svg class="cloud c3" width="160" height="55" viewBox="0 0 160 55"><g fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round"><path d="M10 38 q8 -12 22 -7 q6 -12 20 -5 q12 -7 18 3 q14 -3 14 9"/></g></svg>
+</div>
+
+<div class="top-banner">愿大家<span class="orn">❖</span>一研为定，成功上岸<span class="orn">❖</span></div>
+
+<main>
+  <!-- ========== 页面一：首页 ========== -->
+  <section class="page active" id="page-home">
+    <img class="logo-img" src="logo.png" alt="金榜时代 GLISTIME" />
+    <div class="page-title">上岸灵签</div>
+    <div class="page-sub">一研为定 · 金榜可期</div>
+    <div class="brush-line"></div>
+
+    <div class="tube-wrap" id="homeTube">
+      <div class="tube-glow"></div>
+      <!-- 签筒插画 JS 注入 -->
+    </div>
+
+    <button class="btn-main" onclick="startDraw()"><span>摇动签筒，抽取你的研运签</span></button>
+
+    <p class="hint">
+      抽取后可保存海报，分享给研友沾喜气
+    </p>
+
+    <div class="slogan">抽签锁好运，静候佳音上岸见</div>
+  </section>
+
+  <!-- ========== 页面二：抽签动画页 ========== -->
+  <section class="page" id="page-anim">
+    <img class="logo-img logo-sm" src="logo.png" alt="金榜时代 GLISTIME" />
+    <div class="page-title" style="font-size:21px;">诚心摇签</div>
+    <div class="page-sub">心诚则灵 · 好运将至</div>
+
+    <div class="shake-stage">
+      <div id="animStick" class="stick-fly"><!-- 弹出的签 JS 注入 --></div>
+      <div id="animTube" class="shaking"><!-- 签筒插画 JS 注入 --></div>
+      <div class="loading-text">灵签感应中<span class="dots"></span></div>
+    </div>
+  </section>
+
+  <!-- ========== 页面三：结果页 ========== -->
+  <section class="page" id="page-result">
+    <img class="logo-img logo-sm" src="logo.png" alt="金榜时代 GLISTIME" />
+    <div class="page-title" style="font-size:21px;">恭喜抽得吉签</div>
+    <div class="page-sub">吉星高照 · 上岸可期</div>
+
+    <div class="result-card" id="resultCard">
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      <div class="luck-no reveal d1" id="rNo">第 1 签</div>
+      <div class="luck-name reveal d2" id="rName">厚积上上签</div>
+      <div class="seal" id="rSeal">吉</div>
+      <div class="luck-text reveal d3" id="rText">笔底藏千卷，功到自然成</div>
+      <div class="divider reveal d4"></div>
+      <div class="luck-read reveal d5" id="rRead">解签：你长久的积累已经足够扎实，正常发挥就是最好的结果，稳上岸。</div>
+      <div class="koi-box reveal d6" id="rKoi"><!-- 锦鲤插画 JS 注入 --></div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="openForwardPoster()">转 发 给 研 友</button>
+      <button class="btn btn-outline" onclick="backHome()">再 抽 一 支</button>
+    </div>
+  </section>
+</main>
+
+<!-- 转发海报弹窗 -->
+<div class="modal-mask" id="posterMask" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal poster-modal">
+    <div class="egg-title">· 转发给研友 ·</div>
+    <img class="poster-img" id="posterImg" alt="上岸灵签转发海报" />
+    <p class="save-hint">长按海报，保存后转发给研友</p>
+    <button class="btn btn-outline btn-small" onclick="closePosterModal()">关 闭</button>
+  </div>
+</div>
+
+<!-- 彩蛋弹窗 -->
+<div class="modal-mask" id="eggMask" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="egg-title">· 彩 蛋 ·</div>
+    <div class="egg-text">你解锁圆满祝福<br/>愿你们双双上岸</div>
+    <button class="btn btn-outline btn-small" onclick="document.getElementById('eggMask').classList.remove('show')">收 下 祝 福</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= 数据：20 支吉签 ================= */
+const LUCKY_STICKS = [
+  { no: 1,  name: "厚积上上签", text: "笔底藏千卷，功到自然成", read: "你长久的积累已经足够扎实，正常发挥就是最好的结果，稳上岸。" },
+  { no: 2,  name: "锦鲤绕身签", text: "锦鲤随身至，难题自绕行", read: "考场上容易遇到熟悉思路，陌生题也能找到突破口，好运加持。" },
+  { no: 3,  name: "落笔生花签", text: "胸中有丘壑，下笔即踩分", read: "主观题思路清晰，答题有条理，阅卷老师一眼看到得分点。" },
+  { no: 4,  name: "安枕稳心签", text: "心神常安定，风浪不扰君", read: "考前睡眠安稳，不会过度内耗，心态赢过大多数人。" },
+  { no: 5,  name: "记忆高光签", text: "所背皆不忘，要点自浮现", read: "考场上背书过的知识点自动浮现，背诵内容记得牢固。" },
+  { no: 6,  name: "避坑吉签",   text: "审题无偏差，一眼识题意", read: "不容易看错题、漏条件，避开题干陷阱，少丢冤枉分。" },
+  { no: 7,  name: "稳步进阶签", text: "日日有精进，步步向龙门", read: "冲刺阶段持续稳步提升，每一天都在拉近距离。" },
+  { no: 8,  name: "如愿择校签", text: "心愿有归处，院校待君来", read: "你的目标院校在等你，分数足够抵达目标。" },
+  { no: 9,  name: "精力充沛签", text: "神清气力足，久坐不疲惫", read: "冲刺阶段精力在线，考场长时间答题也不容易乏力。" },
+  { no: 10, name: "逢难化吉签", text: "遇阻不必慌，转念即是通", read: "遇到不会的题不要慌，冷静思考之后可以找到破题思路。" },
+  { no: 11, name: "蒙择皆对签", text: "犹豫之时选，选择总相宜", read: "拿捏不准的选择题，最后选择大多是正确答案。" },
+  { no: 12, name: "研友同喜签", text: "同路人相伴，喜气互相传", read: "和研友互相鼓励，彼此带动，一起奔赴上岸。" },
+  { no: 13, name: "笔下从容签", text: "答题节奏稳，时间刚刚好", read: "考场时间分配完美，不会做不完卷子，从容写完所有题目。" },
+  { no: 14, name: "扫除内耗签", text: "杂念随风散，只守本心学", read: "减少胡思乱想，不再反复怀疑自己，专注当下复习。" },
+  { no: 15, name: "吉星照卷签", text: "文昌临案上，考卷有灵光", read: "文昌吉星加持，思路打开，原本卡壳的地方豁然开朗。" },
+  { no: 16, name: "苦尽甘来签", text: "熬过寒宵苦，终闻登榜音", read: "之前所有辛苦都不会白费，结局不负付出。" },
+  { no: 17, name: "平安赴考签", text: "往返皆顺遂，平安入考场", read: "赶考路途顺利，没有突发状况，顺顺利利参加考试。" },
+  { no: 18, name: "超常发挥签", text: "发挥超平日，惊喜自可期", read: "最终成绩高于多次模拟，交出超出预期的答卷。" },
+  { no: 19, name: "万事周全签", text: "大小皆妥当，诸事不添乱", read: "证件、住宿、行程、复习安排一切顺利，没有意外打乱节奏。" },
+  { no: 20, name: "圆满登岸签", text: "一研即可定，金榜得题名", read: "终极圆满签，所愿皆所得，成功上岸！" },
+];
+
+let currentStick = null;
+let lastNo = 0;
+
+/* ================= 签筒 SVG ================= */
+function tubeSVG(id) {
+  return `
+  <svg width="200" height="268" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="木质签筒，写有上岸灵签">
+    <defs>
+      <linearGradient id="wood${id}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#A9744F"/>
+        <stop offset=".5" stop-color="#C99B6E"/>
+        <stop offset="1" stop-color="#A9744F"/>
+      </linearGradient>
+      <linearGradient id="woodTop${id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#8A5A3C"/>
+        <stop offset="1" stop-color="#6E442C"/>
+      </linearGradient>
+      <radialGradient id="glow${id}" cx=".5" cy=".5" r=".5">
+        <stop offset="0" stop-color="#E6CF7F" stop-opacity=".5"/>
+        <stop offset="1" stop-color="#E6CF7F" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <!-- 地面阴影 -->
+    <ellipse cx="95" cy="248" rx="70" ry="9" fill="rgba(74,59,47,.14)"/>
+    <!-- 签（微微闪烁） -->
+    <g>
+      ${[58, 72, 86, 100, 114, 128].map((x, i) => `
+        <rect x="${x}" y="${60 - (i % 2) * 8}" width="9" height="90" rx="4.5"
+              fill="#E8D5AE" stroke="#C9A227" stroke-width="1" transform="rotate(${(i - 2.5) * 3} ${x + 4.5} 100)"/>
+      `).join("")}
+    </g>
+    <!-- 筒身 -->
+    <path d="M55 100 L62 235 Q63 244 72 244 L118 244 Q127 244 128 235 L135 100 Z"
+          fill="url(#wood${id})" stroke="#7A4E31" stroke-width="2"/>
+    <!-- 筒口沿 -->
+    <ellipse cx="95" cy="100" rx="40" ry="10" fill="url(#woodTop${id})" stroke="#7A4E31" stroke-width="2"/>
+    <ellipse cx="95" cy="102" rx="33" ry="7" fill="#5E3A24"/>
+    <!-- 朱砂装饰带 -->
+    <rect x="60" y="140" width="72" height="46" rx="4" fill="#B93A32" stroke="#9E2F28" stroke-width="1"/>
+    <text x="95" y="158" text-anchor="middle" font-size="15" fill="#FFF3DE" letter-spacing="3" font-family="serif">上岸</text>
+    <text x="95" y="178" text-anchor="middle" font-size="15" fill="#FFF3DE" letter-spacing="3" font-family="serif">灵签</text>
+    <!-- 鎏金箍线 -->
+    <rect x="58" y="120" width="74" height="4" fill="#C9A227" opacity=".85" rx="2"/>
+    <rect x="60" y="222" width="70" height="4" fill="#C9A227" opacity=".85" rx="2"/>
+    <!-- 筒身顶部柔光 -->
+    <ellipse cx="95" cy="96" rx="52" ry="16" fill="url(#glow${id})"/>
+    <!-- 小祥云 -->
+    <g fill="none" stroke="#C9A227" stroke-width="2" opacity=".75">
+      <path d="M26 58 q6 -8 14 -4 q4 -8 12 -3 q8 -4 8 5" />
+      <path d="M138 62 q5 -7 12 -3 q4 -7 10 -2" />
+      <path d="M134 208 q6 -8 14 -4 q4 -8 12 -3" />
+    </g>
+  </svg>`;
+}
+
+/* ================= 弹出的签 SVG ================= */
+function stickSVG(no) {
+  return `
+  <svg width="46" height="170" viewBox="0 0 46 170" xmlns="http://www.w3.org/2000/svg">
+    <rect x="6" y="8" width="34" height="150" rx="17" fill="#E8D5AE" stroke="#C9A227" stroke-width="2"/>
+    <rect x="6" y="8" width="34" height="26" rx="13" fill="#B93A32"/>
+    <text x="23" y="92" text-anchor="middle" font-size="20" fill="#B93A32"
+          font-family="serif" writing-mode="tb" letter-spacing="4">${no}</text>
+  </svg>`;
+}
+
+/* ================= 锦鲤 SVG ================= */
+function koiSVG() {
+  return `
+  <svg width="132" height="88" viewBox="0 0 130 86" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="小锦鲤">
+    <defs>
+      <linearGradient id="koiBody" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#FFF3E4"/>
+        <stop offset="1" stop-color="#F6D8B8"/>
+      </linearGradient>
+    </defs>
+    <!-- 波纹 -->
+    <g fill="none" stroke="#C9A227" stroke-width="1.6" opacity=".55">
+      <path d="M14 70 q10 -6 20 0 q10 6 20 0"/>
+      <path d="M80 76 q10 -6 20 0"/>
+    </g>
+    <!-- 尾巴 -->
+    <path d="M92 44 q26 -18 34 -6 q-8 4 -10 12 q10 6 2 14 q-14 2 -26 -8 Z" fill="#E89A6B" opacity=".9"/>
+    <!-- 身体 -->
+    <ellipse cx="62" cy="44" rx="34" ry="20" fill="url(#koiBody)" stroke="#D9A15E" stroke-width="1.5"/>
+    <!-- 朱砂斑 -->
+    <path d="M44 32 q10 -6 18 2 q4 8 -6 12 q-12 2 -12 -14 Z" fill="#B93A32" opacity=".88"/>
+    <circle cx="80" cy="48" r="6.5" fill="#B93A32" opacity=".8"/>
+    <circle cx="68" cy="58" r="4" fill="#C9A227" opacity=".75"/>
+    <!-- 鳍 -->
+    <path d="M58 62 q-4 12 6 14 q6 -6 4 -13 Z" fill="#E89A6B" opacity=".85"/>
+    <path d="M52 26 q-2 -10 8 -10 q4 6 0 11 Z" fill="#E89A6B" opacity=".85"/>
+    <!-- 眼睛 -->
+    <circle cx="37" cy="40" r="3" fill="#4A3B2F"/>
+    <circle cx="36" cy="39" r="1" fill="#FFF8EC"/>
+    <!-- 嘴角微笑 -->
+    <path d="M30 46 q4 4 8 2" fill="none" stroke="#B93A32" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>`;
+}
+
+/* ================= 金粉粒子 ================= */
+function spawnDust(count) {
+  const box = document.getElementById("ambience");
+  for (let i = 0; i < count; i++) {
+    const d = document.createElement("i");
+    d.className = "dust";
+    d.style.left = Math.random() * 100 + "vw";
+    d.style.animationDuration = (9 + Math.random() * 10) + "s";
+    d.style.animationDelay = (-Math.random() * 15) + "s";
+    d.style.transform = `scale(${0.5 + Math.random() * 1.2})`;
+    box.appendChild(d);
+  }
+}
+
+/* ================= 页面切换 ================= */
+function showPage(id) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  const target = document.getElementById(id);
+  target.classList.add("active");
+  // 重置结果页浮现动画
+  if (id === "page-result") {
+    target.querySelectorAll(".reveal").forEach(el => {
+      el.style.animation = "none";
+      void el.offsetWidth;
+      el.style.animation = "";
+    });
+    const seal = document.getElementById("rSeal");
+    seal.style.animation = "none";
+    void seal.offsetWidth;
+    seal.style.animation = "";
+  }
+  window.scrollTo({ top: 0 });
+}
+
+/* ================= 抽签流程 ================= */
+function startDraw() {
+  playRustle();
+  const pool = LUCKY_STICKS.filter(s => s.no !== lastNo);
+  currentStick = pool[Math.floor(Math.random() * pool.length)];
+
+  document.getElementById("animTube").innerHTML = tubeSVG("anim");
+  document.getElementById("animStick").innerHTML = stickSVG(currentStick.no);
+  showPage("page-anim");
+
+  // 重置弹签动画
+  const stickEl = document.getElementById("animStick");
+  stickEl.style.animation = "none";
+  void stickEl.offsetWidth;
+  stickEl.style.animation = "";
+
+  setTimeout(() => showResult(currentStick), 2900);
+}
+
+function showResult(stick) {
+  lastNo = stick.no;
+  document.getElementById("rNo").textContent = `第 ${stick.no} 签`;
+  document.getElementById("rName").textContent = stick.name;
+  document.getElementById("rSeal").textContent = stick.no === 20 ? "圆满" : "吉";
+  document.getElementById("rText").textContent = stick.text;
+  document.getElementById("rRead").textContent = `解签：${stick.read}`;
+  document.getElementById("rKoi").innerHTML = koiSVG();
+  showPage("page-result");
+}
+
+function backHome() {
+  showPage("page-home");
+}
+
+/* ================= 转发海报（含二维码） ================= */
+let posterDataURL = null;
+let eggUnlocked = false;
+
+function loadImg(src) {
+  return new Promise((resolve, reject) => {
+    const im = new Image();
+    im.onload = () => resolve(im);
+    im.onerror = reject;
+    im.src = src;
+  });
+}
+
+function openForwardPoster() {
+  const mask = document.getElementById("posterMask");
+  const imgEl = document.getElementById("posterImg");
+  // 先展示弹窗与占位，再异步绘制
+  if (!posterDataURL) imgEl.removeAttribute("src");
+  mask.classList.add("show");
+  if (posterDataURL) { imgEl.src = posterDataURL; return; }
+
+  Promise.all([loadImg("logo.png"), loadImg("share-qr.png")])
+    .then(([logo, qr]) => {
+      posterDataURL = drawForwardPoster(logo, qr);
+      imgEl.src = posterDataURL;
+    })
+    .catch(() => showToast("海报素材加载失败，请刷新重试"));
+}
+
+function closePosterModal() {
+  document.getElementById("posterMask").classList.remove("show");
+  // 小彩蛋：看过转发海报即解锁圆满祝福
+  if (!eggUnlocked) {
+    eggUnlocked = true;
+    setTimeout(showEasterEgg, 500);
+  }
+}
+
+function drawCloud(ctx, x, y, s, color) {
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.quadraticCurveTo(x + 8*s, y - 10*s, x + 18*s, y - 3*s);
+  ctx.quadraticCurveTo(x + 26*s, y - 12*s, x + 34*s, y - 2*s);
+  ctx.stroke();
+}
+
+function drawForwardPoster(logo, qr) {
+  const W = 750, H = 1260;
+  const canvas = document.createElement("canvas");
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  const serif = '"Noto Serif SC","Songti SC","SimSun","STSong",serif';
+
+  // 米白渐变底
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, "#FBF6EA");
+  bg.addColorStop(1, "#F3EBDA");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // 朱砂外框 + 鎏金内框
+  ctx.strokeStyle = "#B93A32"; ctx.lineWidth = 8;
+  ctx.strokeRect(28, 28, W - 56, H - 56);
+  ctx.strokeStyle = "#C9A227"; ctx.lineWidth = 2;
+  ctx.strokeRect(44, 44, W - 88, H - 88);
+
+  drawCloud(ctx, 90, 130, 2.2, "#C9A227");
+  drawCloud(ctx, 540, 150, 1.8, "rgba(185,58,50,.5)");
+  drawCloud(ctx, 110, 1090, 1.8, "rgba(201,162,39,.6)");
+  drawCloud(ctx, 560, 1110, 2.2, "#C9A227");
+
+  ctx.textAlign = "center";
+
+  // 品牌 Logo
+  const lw = 520, lh = lw * (logo.height / logo.width);
+  ctx.drawImage(logo, (W - lw) / 2, 92, lw, lh);
+
+  // 标题
+  ctx.fillStyle = "#B93A32";
+  ctx.font = `700 64px ${serif}`;
+  ctx.fillText("上 岸 灵 签", W / 2, 370);
+  ctx.fillStyle = "#C9A227";
+  ctx.font = `400 26px ${serif}`;
+  ctx.fillText("· 一研为定 · 成功上岸 ·", W / 2, 420);
+
+  // 二维码白色底板
+  const plate = 500, px = (W - plate) / 2, py = 470;
+  ctx.fillStyle = "#FFFDF7";
+  ctx.strokeStyle = "#C9A227"; ctx.lineWidth = 3;
+  ctx.beginPath();
+  if (ctx.roundRect) { ctx.roundRect(px, py, plate, plate, 24); } else { ctx.rect(px, py, plate, plate); }
+  ctx.fill(); ctx.stroke();
+  ctx.drawImage(qr, px + 20, py + 20, plate - 40, plate - 40);
+
+  // 提示文字
+  ctx.fillStyle = "#4A3B2F";
+  ctx.font = `500 34px ${serif}`;
+  ctx.fillText("手机扫码 · 摇签锁好运", W / 2, py + plate + 56);
+  ctx.fillStyle = "#8A7A66";
+  ctx.font = `400 27px ${serif}`;
+  ctx.fillText("抽一支属于你的研运签，分享给研友沾喜气", W / 2, py + plate + 110);
+
+  // 底部 slogan
+  ctx.fillStyle = "#B93A32";
+  ctx.font = `500 40px ${serif}`;
+  ctx.fillText("抽签锁好运，静候佳音上岸见", W / 2, H - 118);
+  ctx.fillStyle = "#8A7A66";
+  ctx.font = `400 22px ${serif}`;
+  ctx.fillText("—— 愿每一份坚持，都有回响 ——", W / 2, H - 72);
+
+  return canvas.toDataURL("image/png");
+}
+
+function showEasterEgg() {
+  document.getElementById("eggMask").classList.add("show");
+}
+
+/* ================= Toast ================= */
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+/* ================= 轻微毛笔沙沙音效（WebAudio 合成，无外部文件） ================= */
+function playRustle() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const duration = 2.2, sampleRate = ctx.sampleRate;
+    const buffer = ctx.createBuffer(1, sampleRate * duration, sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      const t = i / sampleRate;
+      const swell = 0.35 + 0.65 * Math.abs(Math.sin(t * Math.PI * 2.2));
+      const fade = Math.min(1, t * 6) * Math.max(0, 1 - t / duration);
+      data[i] = (Math.random() * 2 - 1) * 0.18 * swell * fade;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.value = 3200;
+    filter.Q.value = 0.7;
+    const gain = ctx.createGain();
+    gain.gain.value = 0.5;
+    src.connect(filter).connect(gain).connect(ctx.destination);
+    src.start();
+  } catch (e) { /* 音效失败静默处理 */ }
+}
+
+/* ================= 初始化 ================= */
+document.getElementById("homeTube").insertAdjacentHTML("beforeend", tubeSVG("home"));
+document.getElementById("rKoi").innerHTML = koiSVG();
+spawnDust(12);
+</script>
+</body>
+</html>
